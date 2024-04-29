@@ -1,8 +1,12 @@
+// Importing required modules
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const PASSWORDLENGTH=8;
 
-const todoschema=mongoose.Schema({
+// Defining the minimum password length
+const PASSWORDLENGTH = 8;
+
+// Defining the TEMPLATE schema
+const TEMPLATEschema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
@@ -13,8 +17,10 @@ const todoschema=mongoose.Schema({
         required: true,
         minlength: [10, 'Your task needs to be more descriptive! 10 characters please!']
     }
-})
-const userschema=mongoose.Schema({
+});
+
+// Defining the user schema
+const userschema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
@@ -26,34 +32,38 @@ const userschema=mongoose.Schema({
         required: true,
         minlength: [PASSWORDLENGTH, `Passwords must have at least this many letters: ${PASSWORDLENGTH}`]
     },
-    todos:[todoschema]
-})
+    TEMPLATE: [TEMPLATEschema]
+});
 
+// Pre-save middleware to hash the password
 userschema.pre('save', hashPassword);
 
-userschema.statics.login=login;
+// Static method for user login
+userschema.statics.login = login;
 
 /**
  * @param {*} username of the user to log in
  * @param {*} password of the user to log in
  * @returns the user if credentials is successfully validated or null in any other case.
  */
-async function login(username, password){
+async function login(username, password) {
     let loginresult = null;
-    const user = await this.findOne({username});
-    if(user){
+    const user = await this.findOne({ username });
+    if (user) {
         const auth = await bcrypt.compare(password, user.password);
-        if(auth) loginresult=user;
+        if (auth) loginresult = user;
     }
     return loginresult;
 }
 
-async function hashPassword(next){
+async function hashPassword(next) {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
     next();
 }
 
-const User = mongoose.model('user',userschema);
+// Creating the User model
+const User = mongoose.model('user', userschema);
 
-module.exports=User;
+// Exporting the User model
+module.exports = User;

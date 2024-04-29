@@ -1,23 +1,37 @@
-const jwt=require('jsonwebtoken');
+// Import the jwt library
+const jwt = require('jsonwebtoken');
 
-const requireAuth = (req,res,next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+// Define a function to require authentication
+const requireAuth = (req, res, next) => {
+  // Get the authorization header from the request
+  const token = req.headers.authorization?.split(' ')[1];
 
-    if(typeof(token)!=='undefined'&&typeof(token)==='string'){
-        jwt.verify(token, process.env.JWTSECRET, async (err, decodedtoken)=>{
-            if(!err){
-                const {user}=decodedtoken;
-                req.body.user=user;
-                next();
-            } else {
-                res.status(404).json({message:"Access denied!"});
-            }
-        })
-    } else {
-        res.status(404).json({message:"Access denied!"})
-    }
-}
+  // Check if the token is present and is a string
+  if (typeof token!== 'undefined' && typeof token === 'string') {
+    // Use jwt.verify to verify the token
+    jwt.verify(token, process.env.JWTSECRET, async (err, decodedtoken) => {
+      // If there's no error, the token is valid
+      if (!err) {
+        // Get the user from the decoded token
+        const { user } = decodedtoken;
 
-module.exports={
-    requireAuth
-}
+        // Add the user to the request body
+        req.body.user = user;
+
+        // Call the next middleware function
+        next();
+      } else {
+        // If there's an error, send a 404 response with an error message
+        res.status(404).json({ message: "Access denied!" });
+      }
+    });
+  } else {
+    // If the token is not present or is not a string, send a 404 response with an error message
+    res.status(404).json({ message: "Access denied!" });
+  }
+};
+
+// Export the requireAuth function
+module.exports = {
+  requireAuth,
+};
